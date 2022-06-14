@@ -6,7 +6,7 @@ import controls from './controls';
 import ui from './ui';
 import { repaint } from './utils/animation';
 import browser from './utils/browser';
-import { getElement, getElements, matches, toggleClass } from './utils/elements';
+import { getElements, matches, toggleClass } from './utils/elements';
 import { off, on, once, toggleListener, triggerEvent } from './utils/events';
 import is from './utils/is';
 import { silencePromise } from './utils/promise';
@@ -413,8 +413,8 @@ class Listeners {
 
     // Click video
     if (player.supported.ui && player.config.clickToPlay && !player.isAudio) {
-      // Re-fetch the wrapper
-      const wrapper = getElement.call(player, `.${player.config.classNames.video}`);
+      // Re-fetch the wrapper?
+      const { wrapper } = player.elements;
 
       // Bail if there's no wrapper (this should never happen)
       if (!is.element(wrapper)) {

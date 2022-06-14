@@ -111,14 +111,19 @@ Object.entries(build.js).forEach(([filename, entry]) => {
                     [
                       '@babel/env',
                       {
-                        // debug: true,
+                        debug: true,
+                        loose: true,
                         useBuiltIns: polyfill ? 'usage' : false,
                         corejs: polyfill ? 3 : undefined,
                         bugfixes: true,
                       },
                     ],
                   ],
-                  plugins: ['@babel/plugin-proposal-class-properties', '@babel/plugin-proposal-optional-chaining'],
+                  plugins: [
+                    ['@babel/plugin-proposal-class-properties', { loose: true }],
+                    ['@babel/plugin-proposal-optional-chaining', { loose: true }],
+                    ['@babel/plugin-proposal-object-rest-spread', { loose: true, useBuiltIns: true }],
+                  ],
                   babelrc: false,
                   exclude: [/\/core-js\//],
                 }),

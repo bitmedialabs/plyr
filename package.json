@@ -6,7 +6,7 @@
   "author": "Sam Potts <sam@potts.es>",
   "main": "dist/plyr.js",
   "types": "src/js/plyr.d.ts",
-  "module": "dist/plyr.min.mjs",
+  "module": "dist/plyr.mjs",
   "jsnext:main": "dist/plyr.min.mjs",
   "browser": "dist/plyr.min.js",
   "sass": "src/sass/plyr.scss",

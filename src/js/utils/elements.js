@@ -197,6 +197,10 @@ export function toggleHidden(element, hidden) {
 
 // Mirror Element.classList.toggle, with IE compatibility for "force" argument
 export function toggleClass(element, className, force) {
+  if (!className) {
+    return false;
+  }
+
   if (is.nodeList(element)) {
     return Array.from(element).map((e) => toggleClass(e, className, force));
   }
@@ -207,8 +211,12 @@ export function toggleClass(element, className, force) {
       method = force ? 'add' : 'remove';
     }
 
-    element.classList[method](className);
-    return element.classList.contains(className);
+    let result = false;
+    className.split(' ').forEach((token) => {
+      element.classList[method](token);
+      result = result || element.classList.contains(token);
+    });
+    return result;
   }
 
   return false;

@@ -3,6 +3,7 @@
 // ==========================================================================
 
 import { closest } from './arrays';
+import { toggleClass } from './elements';
 import is from './is';
 
 // Check support for a CSS declaration
@@ -116,7 +117,7 @@ export function setAspectRatio(input) {
       this.media.style.transform = `translateY(-${offset}%)`;
     }
   } else if (this.isHTML5) {
-    wrapper.classList.add(this.config.classNames.videoFixedRatio);
+    toggleClass(wrapper, this.config.classNames.videoFixedRatio, true);
   }
 
   return { padding, ratio };

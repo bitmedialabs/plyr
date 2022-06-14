@@ -1,4 +1,4 @@
-import { createElement } from '../utils/elements';
+import { createElement, toggleClass } from '../utils/elements';
 import { once } from '../utils/events';
 import fetch from '../utils/fetch';
 import is from '../utils/is';
@@ -601,7 +601,7 @@ class PreviewThumbnails {
 
   toggleThumbContainer = (toggle = false, clearShowing = false) => {
     const className = this.player.config.classNames.previewThumbnails.thumbContainerShown;
-    this.elements.thumb.container.classList.toggle(className, toggle);
+    toggleClass(this.elements.thumb.container, className, toggle);
 
     if (!toggle && clearShowing) {
       this.showingThumb = null;
@@ -611,7 +611,7 @@ class PreviewThumbnails {
 
   toggleScrubbingContainer = (toggle = false) => {
     const className = this.player.config.classNames.previewThumbnails.scrubbingContainerShown;
-    this.elements.scrubbing.container.classList.toggle(className, toggle);
+    toggleClass(this.elements.scrubbing.container, className, toggle);
 
     if (!toggle) {
       this.showingThumb = null;

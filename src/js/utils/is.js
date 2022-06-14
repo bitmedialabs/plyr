@@ -2,9 +2,9 @@
 // Type checking utils
 // ==========================================================================
 
-const getConstructor = (input) => (input !== null && typeof input !== 'undefined' ? input.constructor : null);
+const getConstructor = (input) => (input != null ? input.constructor : null);
 const instanceOf = (input, constructor) => Boolean(input && constructor && input instanceof constructor);
-const isNullOrUndefined = (input) => input === null || typeof input === 'undefined';
+const isNullOrUndefined = (input) => input == null;
 const isObject = (input) => getConstructor(input) === Object;
 const isNumber = (input) => getConstructor(input) === Number && !Number.isNaN(input);
 const isString = (input) => getConstructor(input) === String;
@@ -45,7 +45,7 @@ const isUrl = (input) => {
 
   // Add the protocol if required
   let string = input;
-  if (!input.startsWith('http://') || !input.startsWith('https://')) {
+  if (input.slice(0, 7) !== 'http://' && input.slice(0, 8) !== 'https://') {
     string = `http://${input}`;
   }
 

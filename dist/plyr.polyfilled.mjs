@@ -6087,6 +6087,7 @@ const vimeo = {
     const id = parseId$1(source); // Build an iframe
 
     const iframe = createElement('iframe');
+    toggleClass(iframe, player.config.classNames.embedMedia, true);
     const src = format(player.config.urls.vimeo.iframe, id, params);
     iframe.setAttribute('src', src);
     iframe.setAttribute('allowfullscreen', '');
@@ -6493,6 +6494,7 @@ const youtube = {
       id,
       'data-poster': config.customControls ? player.poster : undefined
     });
+    toggleClass(container, player.config.classNames.embedMedia, true);
     player.media = replaceElement(container, player.media); // Only load the poster when using custom controls
 
     if (config.customControls) {
@@ -6539,12 +6541,11 @@ const youtube = {
             const code = event.data; // Messages copied from https://developers.google.com/youtube/iframe_api_reference#onError
 
             const message = {
-              2: 'The request contains an invalid parameter value. For example, this error occurs if you specify a video ID that does not have 11 characters, or if the video ID contains invalid characters, such as exclamation points or asterisks.',
+              2: 'The request contains an invalid parameter value. Verify that video ID that does not have 11 characters, or contains invalid characters.',
               5: 'The requested content cannot be played in an HTML5 player or another error related to the HTML5 player has occurred.',
-              100: 'The video requested was not found. This error occurs when a video has been removed (for any reason) or has been marked as private.',
-              101: 'The owner of the requested video does not allow it to be played in embedded players.',
-              150: 'The owner of the requested video does not allow it to be played in embedded players.'
-            }[code] || 'An unknown error occured';
+              100: 'The video requested was not found. Either video has been removed or has been marked as private.',
+              101: 'The owner of the requested video does not allow it to be played in embedded players.'
+            }[code === 150 ? 101 : code] || 'An unknown error occured';
             player.media.error = {
               code,
               message

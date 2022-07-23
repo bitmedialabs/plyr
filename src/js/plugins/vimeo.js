@@ -129,6 +129,7 @@ const vimeo = {
       'allow',
       ['autoplay', 'fullscreen', 'picture-in-picture', 'encrypted-media', 'accelerometer', 'gyroscope'].join('; '),
     );
+    toggleClass(iframe, player.config.classNames.embedMedia, true);
 
     // Set the referrer policy if required
     if (!is.empty(referrerPolicy)) {

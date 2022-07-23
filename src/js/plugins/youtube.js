@@ -124,6 +124,7 @@ const youtube = {
     const id = generateId(player.provider);
     // Replace media element
     const container = createElement('div', { id, 'data-poster': config.customControls ? player.poster : undefined });
+    toggleClass(container, player.config.classNames.embedMedia, true);
     player.media = replaceElement(container, player.media);
 
     // Only load the poster when using custom controls

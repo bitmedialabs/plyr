@@ -25,7 +25,7 @@ function parseId(url) {
   }
 
   const regex = /^.*(vimeo.com\/|video\/)(\d+).*/;
-  return url.match(regex) ? RegExp.$2 : url;
+  return (url.match(regex) || [])[2] || url;
 }
 
 // Try to extract a hash for private videos from the URL
@@ -68,7 +68,7 @@ const vimeo = {
     setAspectRatio.call(player);
 
     // Load the SDK if not already
-    if (!is.object(window.Vimeo)) {
+    if (typeof Vimeo === 'undefined' || !is.object(Vimeo)) {
       loadScript(player.config.urls.vimeo.sdk)
         .then(() => {
           vimeo.ready.call(player);
@@ -163,7 +163,7 @@ const vimeo = {
 
     // Setup instance
     // https://github.com/vimeo/player.js
-    player.embed = new window.Vimeo.Player(iframe, {
+    player.embed = new Vimeo.Player(iframe, {
       autopause: player.config.autopause,
       muted: player.muted,
     });

@@ -5992,7 +5992,7 @@ function parseId$1(url) {
   }
 
   const regex = /^.*(vimeo.com\/|video\/)(\d+).*/;
-  return url.match(regex) ? RegExp.$2 : url;
+  return (url.match(regex) || [])[2] || url;
 } // Try to extract a hash for private videos from the URL
 
 
@@ -6031,7 +6031,7 @@ const vimeo = {
 
     setAspectRatio.call(player); // Load the SDK if not already
 
-    if (!is.object(window.Vimeo)) {
+    if (typeof Vimeo === 'undefined' || !is.object(Vimeo)) {
       loadScript(player.config.urls.vimeo.sdk).then(() => {
         vimeo.ready.call(player);
       }).catch(error => {
@@ -6087,11 +6087,11 @@ const vimeo = {
     const id = parseId$1(source); // Build an iframe
 
     const iframe = createElement('iframe');
-    toggleClass(iframe, player.config.classNames.embedMedia, true);
     const src = format(player.config.urls.vimeo.iframe, id, params);
     iframe.setAttribute('src', src);
     iframe.setAttribute('allowfullscreen', '');
-    iframe.setAttribute('allow', ['autoplay', 'fullscreen', 'picture-in-picture', 'encrypted-media', 'accelerometer', 'gyroscope'].join('; ')); // Set the referrer policy if required
+    iframe.setAttribute('allow', ['autoplay', 'fullscreen', 'picture-in-picture', 'encrypted-media', 'accelerometer', 'gyroscope'].join('; '));
+    toggleClass(iframe, player.config.classNames.embedMedia, true); // Set the referrer policy if required
 
     if (!is.empty(referrerPolicy)) {
       iframe.setAttribute('referrerPolicy', referrerPolicy);
@@ -6124,7 +6124,7 @@ const vimeo = {
     // https://github.com/vimeo/player.js
 
 
-    player.embed = new window.Vimeo.Player(iframe, {
+    player.embed = new Vimeo.Player(iframe, {
       autopause: player.config.autopause,
       muted: player.muted
     });
@@ -6389,7 +6389,7 @@ function parseId(url) {
   }
 
   const regex = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  return url.match(regex) ? RegExp.$2 : url;
+  return (url.match(regex) || [])[2] || url;
 } // Set playback state and trigger change (only on actual change)
 
 
@@ -6422,7 +6422,7 @@ const youtube = {
     // Add embed class for responsive
     toggleClass(this.elements.wrapper, this.config.classNames.embed, true); // Setup API
 
-    if (is.object(window.YT) && is.function(window.YT.Player)) {
+    if (typeof YT !== 'undefined' && is.object(YT)) {
       youtube.ready.call(this);
     } else {
       // Reference current global callback
@@ -6514,7 +6514,7 @@ const youtube = {
     // https://developers.google.com/youtube/iframe_api_reference
 
 
-    player.embed = new window.YT.Player(player.media, {
+    player.embed = new YT.Player(player.media, {
       videoId,
       host: getHost(config),
       playerVars: extend({}, {
@@ -6871,7 +6871,7 @@ class Ads {
       } // Check if the Google IMA3 SDK is loaded or load it ourselves
 
 
-      if (!is.object(window.google) || !is.object(window.google.ima)) {
+      if (typeof google === 'undefined' || !is.object(google) || !is.object(google.ima)) {
         loadScript(this.player.config.urls.googleIMA.sdk).then(() => {
           this.ready();
         }).catch(() => {

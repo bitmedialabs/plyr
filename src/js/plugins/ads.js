@@ -83,7 +83,7 @@ class Ads {
     }
 
     // Check if the Google IMA3 SDK is loaded or load it ourselves
-    if (!is.object(window.google) || !is.object(window.google.ima)) {
+    if (typeof google === 'undefined' || !is.object(google) || !is.object(google.ima)) {
       loadScript(this.player.config.urls.googleIMA.sdk)
         .then(() => {
           this.ready();

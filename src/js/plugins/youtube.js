@@ -20,7 +20,7 @@ function parseId(url) {
   }
 
   const regex = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  return url.match(regex) ? RegExp.$2 : url;
+  return (url.match(regex) || [])[2] || url;
 }
 
 // Set playback state and trigger change (only on actual change)
@@ -53,7 +53,7 @@ const youtube = {
     toggleClass(this.elements.wrapper, this.config.classNames.embed, true);
 
     // Setup API
-    if (is.object(window.YT) && is.function(window.YT.Player)) {
+    if (typeof YT !== 'undefined' && is.object(YT)) {
       youtube.ready.call(this);
     } else {
       // Reference current global callback
@@ -147,7 +147,7 @@ const youtube = {
 
     // Setup instance
     // https://developers.google.com/youtube/iframe_api_reference
-    player.embed = new window.YT.Player(player.media, {
+    player.embed = new YT.Player(player.media, {
       videoId,
       host: getHost(config),
       playerVars: extend(

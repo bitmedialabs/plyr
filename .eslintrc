@@ -7,7 +7,9 @@
   },
   "globals": {
     "Plyr": false,
-    "jQuery": false
+    "jQuery": false,
+    "YT": false,
+    "Vimeo": false
   },
   "rules": {
     "import/no-cycle": "warn"

@@ -1114,9 +1114,9 @@ typeof navigator === "object" && (function (global, factory) {
       }
 
       let result = false;
-      className.split(' ').forEach(token => {
-        element.classList[method](token);
-        result = result || element.classList.contains(token);
+      className.split(' ').forEach(cls => {
+        element.classList[method](cls);
+        result = result || element.classList.contains(cls);
       });
       return result;
     }
@@ -1125,7 +1125,19 @@ typeof navigator === "object" && (function (global, factory) {
   } // Has class name
 
   function hasClass(element, className) {
-    return is.element(element) && element.classList.contains(className);
+    if (!className || !is.element(element)) {
+      return false;
+    }
+
+    const classes = className.split(' ');
+
+    for (let i = 0; i < classes.length; i += 1) {
+      if (!element.classList.contains(classes[i])) {
+        return false;
+      }
+    }
+
+    return true;
   } // Element matches selector
 
   function matches(element, selector) {

@@ -539,117 +539,70 @@ function createCommonjsModule(fn, module) {
   }
 })(typeof commonjsGlobal !== 'undefined' ? commonjsGlobal : typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : commonjsGlobal);
 
-function _classCallCheck(e, t) {
-  if (!(e instanceof t)) throw new TypeError("Cannot call a class as a function");
-}
-
-function _defineProperties(e, t) {
-  for (var n = 0; n < t.length; n++) {
-    var r = t[n];
-    r.enumerable = r.enumerable || !1, r.configurable = !0, "value" in r && (r.writable = !0), Object.defineProperty(e, r.key, r);
-  }
-}
-
-function _createClass(e, t, n) {
-  return t && _defineProperties(e.prototype, t), n && _defineProperties(e, n), e;
-}
-
-function _defineProperty(e, t, n) {
-  return t in e ? Object.defineProperty(e, t, {
-    value: n,
-    enumerable: !0,
-    configurable: !0,
-    writable: !0
-  }) : e[t] = n, e;
-}
-
-function ownKeys(e, t) {
-  var n = Object.keys(e);
-
-  if (Object.getOwnPropertySymbols) {
-    var r = Object.getOwnPropertySymbols(e);
-    t && (r = r.filter(function (t) {
-      return Object.getOwnPropertyDescriptor(e, t).enumerable;
-    })), n.push.apply(n, r);
-  }
-
-  return n;
-}
-
-function _objectSpread2(e) {
-  for (var t = 1; t < arguments.length; t++) {
-    var n = null != arguments[t] ? arguments[t] : {};
-    t % 2 ? ownKeys(Object(n), !0).forEach(function (t) {
-      _defineProperty(e, t, n[t]);
-    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(n)) : ownKeys(Object(n)).forEach(function (t) {
-      Object.defineProperty(e, t, Object.getOwnPropertyDescriptor(n, t));
-    });
-  }
-
-  return e;
-}
-
-var defaults$1 = {
-  addCSS: !0,
+const defaults$1 = {
+  addCSS: true,
+  // Add CSS to the element to improve usability (required here or in your CSS!)
   thumbWidth: 15,
-  watch: !0
+  // The width of the thumb handle
+  watch: true // Watch for new elements that match a string target
+
 };
 
-function matches$1(e, t) {
-  return function () {
-    return Array.from(document.querySelectorAll(t)).includes(this);
-  }.call(e, t);
-}
+// Element matches a selector
+function matches$1(element, selector) {
 
-function trigger(e, t) {
-  if (e && t) {
-    var n = new Event(t, {
-      bubbles: !0
-    });
-    e.dispatchEvent(n);
+  function match() {
+    return Array.from(document.querySelectorAll(selector)).includes(this);
   }
+
+  const method = match;
+  return method.call(element, selector);
 }
 
-var getConstructor$1 = function (e) {
-  return null != e ? e.constructor : null;
-},
-    instanceOf$1 = function (e, t) {
-  return !!(e && t && e instanceof t);
-},
-    isNullOrUndefined$1 = function (e) {
-  return null == e;
-},
-    isObject$1 = function (e) {
-  return getConstructor$1(e) === Object;
-},
-    isNumber$1 = function (e) {
-  return getConstructor$1(e) === Number && !Number.isNaN(e);
-},
-    isString$1 = function (e) {
-  return getConstructor$1(e) === String;
-},
-    isBoolean$1 = function (e) {
-  return getConstructor$1(e) === Boolean;
-},
-    isFunction$1 = function (e) {
-  return getConstructor$1(e) === Function;
-},
-    isArray$1 = function (e) {
-  return Array.isArray(e);
-},
-    isNodeList$1 = function (e) {
-  return instanceOf$1(e, NodeList);
-},
-    isElement$1 = function (e) {
-  return instanceOf$1(e, Element);
-},
-    isEvent$1 = function (e) {
-  return instanceOf$1(e, Event);
-},
-    isEmpty$1 = function (e) {
-  return isNullOrUndefined$1(e) || (isString$1(e) || isArray$1(e) || isNodeList$1(e)) && !e.length || isObject$1(e) && !Object.keys(e).length;
-},
-    is$1 = {
+// Trigger event
+function trigger(element, type) {
+  if (!element || !type) {
+    return;
+  } // Create and dispatch the event
+
+
+  const event = new Event(type, {
+    bubbles: true
+  }); // Dispatch the event
+
+  element.dispatchEvent(event);
+}
+
+// ==========================================================================
+// Type checking utils
+// ==========================================================================
+const getConstructor$1 = input => input !== null && typeof input !== 'undefined' ? input.constructor : null;
+
+const instanceOf$1 = (input, constructor) => Boolean(input && constructor && input instanceof constructor);
+
+const isNullOrUndefined$1 = input => input === null || typeof input === 'undefined';
+
+const isObject$1 = input => getConstructor$1(input) === Object;
+
+const isNumber$1 = input => getConstructor$1(input) === Number && !Number.isNaN(input);
+
+const isString$1 = input => getConstructor$1(input) === String;
+
+const isBoolean$1 = input => getConstructor$1(input) === Boolean;
+
+const isFunction$1 = input => getConstructor$1(input) === Function;
+
+const isArray$1 = input => Array.isArray(input);
+
+const isNodeList$1 = input => instanceOf$1(input, NodeList);
+
+const isElement$1 = input => instanceOf$1(input, Element);
+
+const isEvent$1 = input => instanceOf$1(input, Event);
+
+const isEmpty$1 = input => isNullOrUndefined$1(input) || (isString$1(input) || isArray$1(input) || isNodeList$1(input)) && !input.length || isObject$1(input) && !Object.keys(input).length;
+
+var is$1 = {
   nullOrUndefined: isNullOrUndefined$1,
   object: isObject$1,
   number: isNumber$1,
@@ -663,99 +616,208 @@ var getConstructor$1 = function (e) {
   empty: isEmpty$1
 };
 
-function getDecimalPlaces(e) {
-  var t = "".concat(e).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
-  return t ? Math.max(0, (t[1] ? t[1].length : 0) - (t[2] ? +t[2] : 0)) : 0;
-}
+// Get the number of decimal places
+function getDecimalPlaces(value) {
+  const match = `${value}`.match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
 
-function round(e, t) {
-  if (1 > t) {
-    var n = getDecimalPlaces(t);
-    return parseFloat(e.toFixed(n));
+  if (!match) {
+    return 0;
   }
 
-  return Math.round(e / t) * t;
-}
+  return Math.max(0, // Number of digits right of decimal point.
+  (match[1] ? match[1].length : 0) - ( // Adjust for scientific notation.
+  match[2] ? +match[2] : 0));
+} // Round to the nearest step
 
-var RangeTouch = function () {
-  function e(t, n) {
-    _classCallCheck(this, e), is$1.element(t) ? this.element = t : is$1.string(t) && (this.element = document.querySelector(t)), is$1.element(this.element) && is$1.empty(this.element.rangeTouch) && (this.config = _objectSpread2({}, defaults$1, {}, n), this.init());
+function round(number, step) {
+  if (step < 1) {
+    const places = getDecimalPlaces(step);
+    return parseFloat(number.toFixed(places));
   }
 
-  return _createClass(e, [{
-    key: "init",
-    value: function () {
-      e.enabled && (this.config.addCSS && (this.element.style.userSelect = "none", this.element.style.webKitUserSelect = "none", this.element.style.touchAction = "manipulation"), this.listeners(!0), this.element.rangeTouch = this);
-    }
-  }, {
-    key: "destroy",
-    value: function () {
-      e.enabled && (this.config.addCSS && (this.element.style.userSelect = "", this.element.style.webKitUserSelect = "", this.element.style.touchAction = ""), this.listeners(!1), this.element.rangeTouch = null);
-    }
-  }, {
-    key: "listeners",
-    value: function (e) {
-      var t = this,
-          n = e ? "addEventListener" : "removeEventListener";
-      ["touchstart", "touchmove", "touchend"].forEach(function (e) {
-        t.element[n](e, function (e) {
-          return t.set(e);
-        }, !1);
-      });
-    }
-  }, {
-    key: "get",
-    value: function (t) {
-      if (!e.enabled || !is$1.event(t)) return null;
-      var n,
-          r = t.target,
-          i = t.changedTouches[0],
-          o = parseFloat(r.getAttribute("min")) || 0,
-          s = parseFloat(r.getAttribute("max")) || 100,
-          u = parseFloat(r.getAttribute("step")) || 1,
-          c = r.getBoundingClientRect(),
-          a = 100 / c.width * (this.config.thumbWidth / 2) / 100;
-      return 0 > (n = 100 / c.width * (i.clientX - c.left)) ? n = 0 : 100 < n && (n = 100), 50 > n ? n -= (100 - 2 * n) * a : 50 < n && (n += 2 * (n - 50) * a), o + round(n / 100 * (s - o), u);
-    }
-  }, {
-    key: "set",
-    value: function (t) {
-      e.enabled && is$1.event(t) && !t.target.disabled && (t.preventDefault(), t.target.value = this.get(t), trigger(t.target, "touchend" === t.type ? "change" : "input"));
-    }
-  }], [{
-    key: "setup",
-    value: function (t) {
-      var n = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : {},
-          r = null;
-      if (is$1.empty(t) || is$1.string(t) ? r = Array.from(document.querySelectorAll(is$1.string(t) ? t : 'input[type="range"]')) : is$1.element(t) ? r = [t] : is$1.nodeList(t) ? r = Array.from(t) : is$1.array(t) && (r = t.filter(is$1.element)), is$1.empty(r)) return null;
+  return Math.round(number / step) * step;
+}
 
-      var i = _objectSpread2({}, defaults$1, {}, n);
+// ==========================================================================
 
-      if (is$1.string(t) && i.watch) {
-        var o = new MutationObserver(function (n) {
-          Array.from(n).forEach(function (n) {
-            Array.from(n.addedNodes).forEach(function (n) {
-              is$1.element(n) && matches$1(n, t) && new e(n, i);
-            });
+class RangeTouch {
+  /**
+   * Setup a new instance
+   * @param {String|Element} target
+   * @param {Object} options
+   */
+  constructor(target, options) {
+    if (is$1.element(target)) {
+      // An Element is passed, use it directly
+      this.element = target;
+    } else if (is$1.string(target)) {
+      // A CSS Selector is passed, fetch it from the DOM
+      this.element = document.querySelector(target);
+    }
+
+    if (!is$1.element(this.element) || !is$1.empty(this.element.rangeTouch)) {
+      return;
+    }
+
+    this.config = Object.assign({}, defaults$1, options);
+    this.init();
+  }
+
+  static get enabled() {
+    return 'ontouchstart' in document.documentElement;
+  }
+  /**
+   * Setup multiple instances
+   * @param {String|Element|NodeList|Array} target
+   * @param {Object} options
+   */
+
+
+  static setup(target, options = {}) {
+    let targets = null;
+
+    if (is$1.empty(target) || is$1.string(target)) {
+      targets = Array.from(document.querySelectorAll(is$1.string(target) ? target : 'input[type="range"]'));
+    } else if (is$1.element(target)) {
+      targets = [target];
+    } else if (is$1.nodeList(target)) {
+      targets = Array.from(target);
+    } else if (is$1.array(target)) {
+      targets = target.filter(is$1.element);
+    }
+
+    if (is$1.empty(targets)) {
+      return null;
+    }
+
+    const config = Object.assign({}, defaults$1, options);
+
+    if (is$1.string(target) && config.watch) {
+      // Create an observer instance
+      const observer = new MutationObserver(mutations => {
+        Array.from(mutations).forEach(mutation => {
+          Array.from(mutation.addedNodes).forEach(node => {
+            if (!is$1.element(node) || !matches$1(node, target)) {
+              return;
+            } // eslint-disable-next-line no-unused-vars
+
+
+            new RangeTouch(node, config);
           });
         });
-        o.observe(document.body, {
-          childList: !0,
-          subtree: !0
-        });
-      }
+      }); // Pass in the target node, as well as the observer options
 
-      return r.map(function (t) {
-        return new e(t, n);
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
       });
     }
-  }, {
-    key: "enabled",
-    get: function () {
-      return "ontouchstart" in document.documentElement;
+
+    return targets.map(t => new RangeTouch(t, options));
+  }
+
+  init() {
+    // Bail if not a touch enabled device
+    if (!RangeTouch.enabled) {
+      return;
+    } // Add useful CSS
+
+
+    if (this.config.addCSS) {
+      this.element.style.userSelect = 'none';
+      this.element.style.webKitUserSelect = 'none';
+      this.element.style.touchAction = 'manipulation';
     }
-  }]), e;
-}();
+
+    this.listeners(true);
+    this.element.rangeTouch = this;
+  }
+
+  destroy() {
+    // Bail if not a touch enabled device
+    if (!RangeTouch.enabled) {
+      return;
+    } // Remove useful CSS
+
+
+    if (this.config.addCSS) {
+      this.element.style.userSelect = '';
+      this.element.style.webKitUserSelect = '';
+      this.element.style.touchAction = '';
+    }
+
+    this.listeners(false);
+    this.element.rangeTouch = null;
+  }
+
+  listeners(toggle) {
+    const method = toggle ? 'addEventListener' : 'removeEventListener'; // Listen for events
+
+    ['touchstart', 'touchmove', 'touchend'].forEach(type => {
+      this.element[method](type, event => this.set(event), false);
+    });
+  }
+  /**
+   * Get the value based on touch position
+   * @param {Event} event
+   */
+
+
+  get(event) {
+    if (!RangeTouch.enabled || !is$1.event(event)) {
+      return null;
+    }
+
+    const input = event.target;
+    const touch = event.changedTouches[0];
+    const min = parseFloat(input.getAttribute('min')) || 0;
+    const max = parseFloat(input.getAttribute('max')) || 100;
+    const step = parseFloat(input.getAttribute('step')) || 1;
+    const delta = max - min; // Calculate percentage
+
+    let percent;
+    const clientRect = input.getBoundingClientRect();
+    const thumbWidth = 100 / clientRect.width * (this.config.thumbWidth / 2) / 100; // Determine left percentage
+
+    percent = 100 / clientRect.width * (touch.clientX - clientRect.left); // Don't allow outside bounds
+
+    if (percent < 0) {
+      percent = 0;
+    } else if (percent > 100) {
+      percent = 100;
+    } // Factor in the thumb offset
+
+
+    if (percent < 50) {
+      percent -= (100 - percent * 2) * thumbWidth;
+    } else if (percent > 50) {
+      percent += (percent - 50) * 2 * thumbWidth;
+    } // Find the closest step to the mouse position
+
+
+    return min + round(delta * (percent / 100), step);
+  }
+  /**
+   * Update range value based on position
+   * @param {Event} event
+   */
+
+
+  set(event) {
+    if (!RangeTouch.enabled || !is$1.event(event) || event.target.disabled) {
+      return;
+    } // Prevent text highlight on iOS
+
+
+    event.preventDefault(); // Set value
+    // eslint-disable-next-line no-param-reassign
+
+    event.target.value = this.get(event); // Trigger event
+
+    trigger(event.target, event.type === 'touchend' ? 'change' : 'input');
+  }
+
+}
 
 // ==========================================================================
 // Type checking utils

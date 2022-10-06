@@ -398,10 +398,10 @@ function repaint(element, delay) {
 // ==========================================================================
 const browser = {
   isIE: Boolean(window.document.documentMode),
-  isEdge: window.navigator.userAgent.includes('Edge'),
-  isWebkit: 'WebkitAppearance' in document.documentElement.style && !/Edge/.test(navigator.userAgent),
-  isIPhone: /(iPhone|iPod)/gi.test(navigator.platform),
-  isIos: navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1 || /(iPad|iPhone|iPod)/gi.test(navigator.platform)
+  isEdge: /Edge/g.test(navigator.userAgent),
+  isWebkit: 'WebkitAppearance' in document.documentElement.style && !/Edge/g.test(navigator.userAgent),
+  isIPhone: /iPhone|iPod/gi.test(navigator.userAgent) && navigator.maxTouchPoints > 1,
+  isIos: /iPad|iPhone|iPod/gi.test(navigator.userAgent) && navigator.maxTouchPoints > 1
 };
 
 // ==========================================================================
@@ -2954,7 +2954,9 @@ const controls = {
     if (!is.empty(this.elements.buttons)) {
       const addProperty = button => {
         const className = this.config.classNames.controlPressed;
+        button.setAttribute('aria-pressed', 'false');
         Object.defineProperty(button, 'pressed', {
+          configurable: true,
           enumerable: true,
 
           get() {
@@ -2963,6 +2965,7 @@ const controls = {
 
           set(pressed = false) {
             toggleClass(button, className, pressed);
+            button.setAttribute('aria-pressed', pressed ? 'true' : 'false');
           }
 
         });

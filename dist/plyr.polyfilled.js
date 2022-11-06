@@ -873,7 +873,7 @@ typeof navigator === "object" && (function (global, factory) {
     } // Must be string from here
 
 
-    if (!isString(input)) {
+    if (!isString(input) || input.length === 0) {
       return false;
     } // Add the protocol if required
 

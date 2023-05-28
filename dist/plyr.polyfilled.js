@@ -842,7 +842,7 @@ typeof navigator === "object" && (function (global, factory) {
 
   const isBoolean = input => getConstructor(input) === Boolean;
 
-  const isFunction = input => getConstructor(input) === Function;
+  const isFunction = input => typeof input === 'function';
 
   const isArray = input => Array.isArray(input);
 
@@ -943,12 +943,20 @@ typeof navigator === "object" && (function (global, factory) {
   // Browser sniffing
   // Unfortunately, due to mixed support, UA sniffing is required
   // ==========================================================================
-  const browser = {
-    isIE: Boolean(window.document.documentMode),
-    isEdge: /Edge/g.test(navigator.userAgent),
-    isWebkit: 'WebkitAppearance' in document.documentElement.style && !/Edge/g.test(navigator.userAgent),
-    isIPhone: /iPhone|iPod/gi.test(navigator.userAgent) && navigator.maxTouchPoints > 1,
-    isIos: /iPad|iPhone|iPod/gi.test(navigator.userAgent) && navigator.maxTouchPoints > 1
+  const isIE = Boolean(window.document.documentMode);
+  const isEdge = /Edge/g.test(navigator.userAgent);
+  const isWebKit = 'WebkitAppearance' in document.documentElement.style && !/Edge/g.test(navigator.userAgent);
+  const isIPhone = /iPhone|iPod/gi.test(navigator.userAgent) && navigator.maxTouchPoints > 1; // navigator.platform may be deprecated but this check is still required
+
+  const isIPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  const isIos = /iPad|iPhone|iPod/gi.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
+  var browser = {
+    isIE,
+    isEdge,
+    isWebKit,
+    isIPhone,
+    isIPadOS,
+    isIos
   };
 
   // ==========================================================================
@@ -1017,11 +1025,8 @@ typeof navigator === "object" && (function (global, factory) {
   } // Set attributes
 
   function setAttributes(element, attributes) {
-    if (!is.element(element) || is.empty(attributes)) {
-      return;
-    } // Assume null and undefined attributes should be left out,
+    if (!is.element(element) || is.empty(attributes)) return; // Assume null and undefined attributes should be left out,
     // Setting them would otherwise convert them to "null" and "undefined"
-
 
     Object.entries(attributes).filter(([, value]) => !is.nullOrUndefined(value)).forEach(([key, value]) => element.setAttribute(key, value));
   } // Create a DocumentFragment
@@ -1041,21 +1046,15 @@ typeof navigator === "object" && (function (global, factory) {
 
 
     return element;
-  } // Inaert an element after another
+  } // Insert an element after another
 
   function insertAfter(element, target) {
-    if (!is.element(element) || !is.element(target)) {
-      return;
-    }
-
+    if (!is.element(element) || !is.element(target)) return;
     target.parentNode.insertBefore(element, target.nextSibling);
   } // Insert a DocumentFragment
 
   function insertElement(type, parent, attributes, text) {
-    if (!is.element(parent)) {
-      return;
-    }
-
+    if (!is.element(parent)) return;
     parent.appendChild(createElement(type, attributes, text));
   } // Remove element(s)
 
@@ -1073,10 +1072,7 @@ typeof navigator === "object" && (function (global, factory) {
   } // Remove all child elements
 
   function emptyElement(element) {
-    if (!is.element(element)) {
-      return;
-    }
-
+    if (!is.element(element)) return;
     let {
       length
     } = element.childNodes;
@@ -1088,10 +1084,7 @@ typeof navigator === "object" && (function (global, factory) {
   } // Replace element
 
   function replaceElement(newChild, oldChild) {
-    if (!is.element(oldChild) || !is.element(oldChild.parentNode) || !is.element(newChild)) {
-      return null;
-    }
-
+    if (!is.element(oldChild) || !is.element(oldChild.parentNode) || !is.element(newChild)) return null;
     oldChild.parentNode.replaceChild(newChild, oldChild);
     return newChild;
   } // Get an attribute object from a string selector
@@ -1101,10 +1094,7 @@ typeof navigator === "object" && (function (global, factory) {
     // '.test' to { class: 'test' }
     // '#test' to { id: 'test' }
     // '[data-test="test"]' to { 'data-test': 'test' }
-    if (!is.string(sel) || is.empty(sel)) {
-      return {};
-    }
-
+    if (!is.string(sel) || is.empty(sel)) return {};
     const attributes = {};
     const existing = extend({}, existingAttributes);
     sel.split(',').forEach(s => {
@@ -1145,10 +1135,7 @@ typeof navigator === "object" && (function (global, factory) {
   } // Toggle hidden
 
   function toggleHidden(element, hidden) {
-    if (!is.element(element)) {
-      return;
-    }
-
+    if (!is.element(element)) return;
     let hide = hidden;
 
     if (!is.boolean(hide)) {
@@ -1243,19 +1230,13 @@ typeof navigator === "object" && (function (global, factory) {
     return this.elements.container.querySelector(selector);
   } // Set focus and tab focus class
 
-  function setFocus(element = null, tabFocus = false) {
-    if (!is.element(element)) {
-      return;
-    } // Set regular focus
-
+  function setFocus(element = null, focusVisible = false) {
+    if (!is.element(element)) return; // Set regular focus
 
     element.focus({
-      preventScroll: true
-    }); // If we want to mimic keyboard focus via tab
-
-    if (tabFocus) {
-      toggleClass(element, this.config.classNames.tabFocus);
-    }
+      preventScroll: true,
+      focusVisible
+    });
   }
 
   // ==========================================================================
@@ -1275,10 +1256,9 @@ typeof navigator === "object" && (function (global, factory) {
 
     // Check for support
     // Basic functionality vs full UI
-    check(type, provider, playsinline) {
-      const canPlayInline = browser.isIPhone && playsinline && support.playsinline;
+    check(type, provider) {
       const api = support[type] || provider !== 'html5';
-      const ui = api && support.rangeInput && (type !== 'video' || !browser.isIPhone || canPlayInline);
+      const ui = api && support.rangeInput;
       return {
         api,
         ui
@@ -1288,6 +1268,9 @@ typeof navigator === "object" && (function (global, factory) {
     // Picture-in-picture support
     // Safari & Chrome only currently
     pip: (() => {
+      // While iPhone's support picture-in-picture for some apps, seemingly Safari isn't one of them
+      // It will throw the following error when trying to enter picture-in-picture
+      // `NotSupportedError: The Picture-in-Picture mode is not supported.`
       if (browser.isIPhone) {
         return false;
       } // Safari
@@ -1770,7 +1753,7 @@ typeof navigator === "object" && (function (global, factory) {
 
   function format(input, ...args) {
     if (is.empty(input)) return input;
-    return input.toString().replace(/{(\d+)}/g, (match, i) => args[i].toString());
+    return input.toString().replace(/{(\d+)}/g, (_, i) => args[i].toString());
   } // Get percentage
 
   function getPercentage(current, max) {
@@ -2351,7 +2334,8 @@ typeof navigator === "object" && (function (global, factory) {
       const attributes = getAttributesFromSelector(this.config.selectors.display[type], attrs);
       const container = createElement('div', extend(attributes, {
         class: `${attributes.class ? attributes.class : ''} ${this.config.classNames.display.time} `.trim(),
-        'aria-label': i18n.get(type, this.config)
+        'aria-label': i18n.get(type, this.config),
+        role: 'timer'
       }), '00:00'); // Reference for updates
 
       this.elements.display[type] = container;
@@ -2365,7 +2349,7 @@ typeof navigator === "object" && (function (global, factory) {
       // Navigate through menus via arrow keys and space
       on.call(this, menuItem, 'keydown keyup', event => {
         // We only care about space and ⬆️ ⬇️️ ➡️
-        if (!['Space', 'ArrowUp', 'ArrowDown', 'ArrowRight'].includes(event.key)) {
+        if (![' ', 'ArrowUp', 'ArrowDown', 'ArrowRight'].includes(event.key)) {
           return;
         } // Prevent play / seek
 
@@ -2379,12 +2363,12 @@ typeof navigator === "object" && (function (global, factory) {
 
         const isRadioButton = matches(menuItem, '[role="menuitemradio"]'); // Show the respective menu
 
-        if (!isRadioButton && ['Space', 'ArrowRight'].includes(event.key)) {
+        if (!isRadioButton && [' ', 'ArrowRight'].includes(event.key)) {
           controls.showMenuPanel.call(this, type, true);
         } else {
           let target;
 
-          if (event.key !== 'Space') {
+          if (event.key !== ' ') {
             if (event.key === 'ArrowDown' || isRadioButton && event.key === 'ArrowRight') {
               target = menuItem.nextElementSibling;
 
@@ -2456,7 +2440,7 @@ typeof navigator === "object" && (function (global, factory) {
 
       });
       this.listeners.bind(menuItem, 'click keyup', event => {
-        if (is.keyboardEvent(event) && event.key !== 'Space') {
+        if (is.keyboardEvent(event) && event.key !== ' ') {
           return;
         }
 
@@ -2607,7 +2591,7 @@ typeof navigator === "object" && (function (global, factory) {
       } // WebKit only
 
 
-      if (!browser.isWebkit) {
+      if (!browser.isWebKit && !browser.isIPadOS) {
         return;
       } // Set CSS custom property
 
@@ -2994,7 +2978,7 @@ typeof navigator === "object" && (function (global, factory) {
     },
 
     // Focus the first menu item in a given (or visible) menu
-    focusFirstMenuItem(pane, tabFocus = false) {
+    focusFirstMenuItem(pane, focusVisible = false) {
       if (this.elements.settings.popup.hidden) {
         return;
       }
@@ -3006,7 +2990,7 @@ typeof navigator === "object" && (function (global, factory) {
       }
 
       const firstItem = target.querySelector('[role^="menuitem"]');
-      setFocus.call(this, firstItem, tabFocus);
+      setFocus.call(this, firstItem, focusVisible);
     },
 
     // Show/hide menu
@@ -3078,7 +3062,7 @@ typeof navigator === "object" && (function (global, factory) {
     },
 
     // Show a panel in the menu
-    showMenuPanel(type = '', tabFocus = false) {
+    showMenuPanel(type = '', focusVisible = false) {
       const target = this.elements.container.querySelector(`#plyr-settings-${this.id}-${type}`); // Nothing to show, bail
 
       if (!is.element(target)) {
@@ -3121,7 +3105,7 @@ typeof navigator === "object" && (function (global, factory) {
 
       toggleHidden(target, false); // Focus the first item
 
-      controls.focusFirstMenuItem.call(this, target, tabFocus);
+      controls.focusFirstMenuItem.call(this, target, focusVisible);
     },
 
     // Set the download URL
@@ -3242,7 +3226,7 @@ typeof navigator === "object" && (function (global, factory) {
           // https://developer.apple.com/library/safari/documentation/AudioVideo/Conceptual/Using_HTML5_Audio_Video/Device-SpecificConsiderations/Device-SpecificConsiderations.html
 
 
-          if (control === 'volume' && !browser.isIos) {
+          if (control === 'volume' && !browser.isIos && !browser.isIPadOS) {
             // Set the attributes
             const attributes = {
               max: 1,
@@ -3682,6 +3666,7 @@ typeof navigator === "object" && (function (global, factory) {
 
       if (!is.element(this.elements.captions)) {
         this.elements.captions = createElement('div', getAttributesFromSelector(this.config.selectors.captions));
+        this.elements.captions.setAttribute('dir', 'auto');
         insertAfter(this.elements.captions, this.elements.wrapper);
       } // Fix IE captions if CORS is used
       // Fetch captions and inject as blobs instead (data URIs not supported!)
@@ -4036,8 +4021,7 @@ typeof navigator === "object" && (function (global, factory) {
     autoplay: false,
     // Only allow one media playing at once (vimeo only)
     autopause: true,
-    // Allow inline playback on iOS (this effects YouTube/Vimeo - HTML5 requires the attribute present)
-    // TODO: Remove iosNative fullscreen option in favour of this (logic needs work)
+    // Allow inline playback on iOS
     playsinline: true,
     // Default time to skip when rewind/fast forward
     seekTime: 10,
@@ -4067,7 +4051,7 @@ typeof navigator === "object" && (function (global, factory) {
     // Sprite (for icons)
     loadSprite: true,
     iconPrefix: 'plyr',
-    iconUrl: 'https://cdn.plyr.io/3.7.2/plyr.svg',
+    iconUrl: 'https://cdn.plyr.io/3.7.8/plyr.svg',
     // Blank video (used to prevent errors on source change)
     blankVideo: 'https://cdn.plyr.io/static/blank.mp4',
     // Quality default
@@ -4290,7 +4274,6 @@ typeof navigator === "object" && (function (global, factory) {
       marker: 'plyr__progress__marker',
       hidden: 'plyr__sr-only',
       hideControls: 'plyr--hide-controls',
-      isIos: 'plyr--is-ios',
       isTouch: 'plyr--is-touch',
       uiSupported: 'plyr--full-ui',
       noTransition: 'plyr--no-transition',
@@ -4318,7 +4301,6 @@ typeof navigator === "object" && (function (global, factory) {
         supported: 'plyr--airplay-supported',
         active: 'plyr--airplay-active'
       },
-      tabFocus: 'plyr__tab-focus',
       previewThumbnails: {
         // Tooltip thumbs
         thumbContainer: 'plyr__preview-thumb',
@@ -4469,10 +4451,7 @@ typeof navigator === "object" && (function (global, factory) {
   class Fullscreen {
     constructor(player) {
       this.onChange = () => {
-        if (!this.enabled) {
-          return;
-        } // Update toggle button
-
+        if (!this.supported) return; // Update toggle button
 
         const button = this.player.elements.buttons.fullscreen;
 
@@ -4490,8 +4469,8 @@ typeof navigator === "object" && (function (global, factory) {
         // Store or restore scroll position
         if (toggle) {
           this.scrollPosition = {
-            x: window.scrollX || 0,
-            y: window.scrollY || 0
+            x: window.scrollX ?? 0,
+            y: window.scrollY ?? 0
           };
         } else {
           window.scrollTo(this.scrollPosition.x, this.scrollPosition.y);
@@ -4516,10 +4495,7 @@ typeof navigator === "object" && (function (global, factory) {
 
           if (toggle) {
             this.cleanupViewport = !hasProperty;
-
-            if (!hasProperty) {
-              viewport.content += `,${property}`;
-            }
+            if (!hasProperty) viewport.content += `,${property}`;
           } else if (this.cleanupViewport) {
             viewport.content = viewport.content.split(',').filter(part => part.trim() !== property).join(',');
           }
@@ -4530,11 +4506,8 @@ typeof navigator === "object" && (function (global, factory) {
       };
 
       this.trapFocus = event => {
-        // Bail if iOS, not active, not the tab key
-        if (browser.isIos || !this.active || event.key !== 'Tab') {
-          return;
-        } // Get the current focused element
-
+        // Bail if iOS/iPadOS, not active, not the tab key
+        if (browser.isIos || browser.isIPadOS || !this.active || event.key !== 'Tab') return; // Get the current focused element
 
         const focused = document.activeElement;
         const focusable = getElements.call(this.player, 'a[href], button:not(:disabled), input:not(:disabled), [tabindex]');
@@ -4553,31 +4526,20 @@ typeof navigator === "object" && (function (global, factory) {
       };
 
       this.update = () => {
-        if (this.enabled) {
+        if (this.supported) {
           let mode;
-
-          if (this.forceFallback) {
-            mode = 'Fallback (forced)';
-          } else if (Fullscreen.native) {
-            mode = 'Native';
-          } else {
-            mode = 'Fallback';
-          }
-
+          if (this.forceFallback) mode = 'Fallback (forced)';else if (Fullscreen.nativeSupported) mode = 'Native';else mode = 'Fallback';
           this.player.debug.log(`${mode} fullscreen enabled`);
         } else {
           this.player.debug.log('Fullscreen not supported and fallback disabled');
         } // Add styling hook to show button
 
 
-        toggleClass(this.player.elements.container, this.player.config.classNames.fullscreen.enabled, this.enabled);
+        toggleClass(this.player.elements.container, this.player.config.classNames.fullscreen.enabled, this.supported);
       };
 
       this.enter = () => {
-        if (!this.enabled) {
-          return;
-        } // iOS native fullscreen doesn't need the request step
-
+        if (!this.supported) return; // iOS native fullscreen doesn't need the request step
 
         if (browser.isIos && this.player.config.fullscreen.iosNative) {
           if (this.player.isVimeo) {
@@ -4585,7 +4547,7 @@ typeof navigator === "object" && (function (global, factory) {
           } else {
             this.target.webkitEnterFullscreen();
           }
-        } else if (!Fullscreen.native || this.forceFallback) {
+        } else if (!Fullscreen.nativeSupported || this.forceFallback) {
           this.toggleFallback(true);
         } else if (!this.prefix) {
           this.target.requestFullscreen({
@@ -4597,15 +4559,17 @@ typeof navigator === "object" && (function (global, factory) {
       };
 
       this.exit = () => {
-        if (!this.enabled) {
-          return;
-        } // iOS native fullscreen
-
+        if (!this.supported) return; // iOS native fullscreen
 
         if (browser.isIos && this.player.config.fullscreen.iosNative) {
-          this.target.webkitExitFullscreen();
+          if (this.player.isVimeo) {
+            this.player.embed.exitFullscreen();
+          } else {
+            this.target.webkitEnterFullscreen();
+          }
+
           silencePromise(this.player.play());
-        } else if (!Fullscreen.native || this.forceFallback) {
+        } else if (!Fullscreen.nativeSupported || this.forceFallback) {
           this.toggleFallback(false);
         } else if (!this.prefix) {
           (document.cancelFullScreen || document.exitFullscreen).call(document);
@@ -4616,11 +4580,7 @@ typeof navigator === "object" && (function (global, factory) {
       };
 
       this.toggle = () => {
-        if (!this.active) {
-          this.enter();
-        } else {
-          this.exit();
-        }
+        if (!this.active) this.enter();else this.exit();
       };
 
       // Keep reference to parent
@@ -4656,26 +4616,23 @@ typeof navigator === "object" && (function (global, factory) {
 
       on.call(this, this.player.elements.container, 'keydown', event => this.trapFocus(event)); // Update the UI
 
-      this.update(); // this.toggle = this.toggle.bind(this);
+      this.update();
     } // Determine if native supported
 
 
-    static get native() {
+    static get nativeSupported() {
       return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled);
     } // If we're actually using native
 
 
-    get usingNative() {
-      return Fullscreen.native && !this.forceFallback;
+    get useNative() {
+      return Fullscreen.nativeSupported && !this.forceFallback;
     } // Get the prefix for handlers
 
 
     static get prefix() {
       // No prefix
-      if (is.function(document.exitFullscreen)) {
-        return '';
-      } // Check for fullscreen support by vendor prefix
-
+      if (is.function(document.exitFullscreen)) return ''; // Check for fullscreen support by vendor prefix
 
       let value = '';
       const prefixes = ['webkit', 'moz', 'ms'];
@@ -4692,21 +4649,23 @@ typeof navigator === "object" && (function (global, factory) {
 
     static get property() {
       return this.prefix === 'moz' ? 'FullScreen' : 'Fullscreen';
-    } // Determine if fullscreen is enabled
+    } // Determine if fullscreen is supported
 
 
-    get enabled() {
-      return (Fullscreen.native || this.player.config.fullscreen.fallback) && this.player.config.fullscreen.enabled && this.player.supported.ui && this.player.isVideo;
+    get supported() {
+      return [// Fullscreen is enabled in config
+      this.player.config.fullscreen.enabled, // Must be a video
+      this.player.isVideo, // Either native is supported or fallback enabled
+      Fullscreen.nativeSupported || this.player.config.fullscreen.fallback, // YouTube has no way to trigger fullscreen, so on devices with no native support, playsinline
+      // must be enabled and iosNative fullscreen must be disabled to offer the fullscreen fallback
+      !this.player.isYouTube || Fullscreen.nativeSupported || !browser.isIos || this.player.config.playsinline && !this.player.config.fullscreen.iosNative].every(Boolean);
     } // Get active state
 
 
     get active() {
-      if (!this.enabled) {
-        return false;
-      } // Fallback using classname
+      if (!this.supported) return false; // Fallback using classname
 
-
-      if (!Fullscreen.native || this.forceFallback) {
+      if (!Fullscreen.nativeSupported || this.forceFallback) {
         return hasClass(this.target, this.player.config.classNames.fullscreen.fallback);
       }
 
@@ -4716,7 +4675,7 @@ typeof navigator === "object" && (function (global, factory) {
 
 
     get target() {
-      return browser.isIos && this.player.config.fullscreen.iosNative ? this.player.media : this.player.elements.fullscreen || this.player.elements.container;
+      return browser.isIos && this.player.config.fullscreen.iosNative ? this.player.media : this.player.elements.fullscreen ?? this.player.elements.container;
     }
 
   }
@@ -4810,9 +4769,7 @@ typeof navigator === "object" && (function (global, factory) {
 
       toggleClass(this.elements.container, this.config.classNames.pip.supported, support.pip && this.isHTML5 && this.isVideo); // Check for airplay support
 
-      toggleClass(this.elements.container, this.config.classNames.airplay.supported, support.airplay && this.isHTML5); // Add iOS class
-
-      toggleClass(this.elements.container, this.config.classNames.isIos, browser.isIos); // Add touch class
+      toggleClass(this.elements.container, this.config.classNames.airplay.supported, support.airplay && this.isHTML5); // Add touch class
 
       toggleClass(this.elements.container, this.config.classNames.isTouch, this.touch); // Ready for API calls
 
@@ -4996,60 +4953,6 @@ typeof navigator === "object" && (function (global, factory) {
         toggleClass(elements.container, player.config.classNames.isTouch, true);
       };
 
-      this.setTabFocus = event => {
-        const {
-          player
-        } = this;
-        const {
-          elements
-        } = player;
-        const {
-          key,
-          type,
-          timeStamp
-        } = event;
-        clearTimeout(this.focusTimer); // Ignore any key other than tab
-
-        if (type === 'keydown' && key !== 'Tab') {
-          return;
-        } // Store reference to event timeStamp
-
-
-        if (type === 'keydown') {
-          this.lastKeyDown = timeStamp;
-        } // Remove current classes
-
-
-        const removeCurrent = () => {
-          const className = player.config.classNames.tabFocus;
-          const current = getElements.call(player, `.${className}`);
-          toggleClass(current, className, false);
-        }; // Determine if a key was pressed to trigger this event
-
-
-        const wasKeyDown = timeStamp - this.lastKeyDown <= 20; // Ignore focus events if a key was pressed prior
-
-        if (type === 'focus' && !wasKeyDown) {
-          return;
-        } // Remove all current
-
-
-        removeCurrent(); // Delay the adding of classname until the focus has changed
-        // This event fires before the focusin event
-
-        if (type !== 'focusout') {
-          this.focusTimer = setTimeout(() => {
-            const focused = document.activeElement; // Ignore if current focus element isn't inside the player
-
-            if (!elements.container.contains(focused)) {
-              return;
-            }
-
-            toggleClass(document.activeElement, player.config.classNames.tabFocus, true);
-          }, 10);
-        }
-      };
-
       this.global = (toggle = true) => {
         const {
           player
@@ -5062,9 +4965,7 @@ typeof navigator === "object" && (function (global, factory) {
 
         toggleListener.call(player, document.body, 'click', this.toggleMenu, toggle); // Detect touch by events
 
-        once.call(player, document.body, 'touchstart', this.firstTouch); // Tab focus detection
-
-        toggleListener.call(player, document.body, 'keydown focus blur focusout', this.setTabFocus, toggle, false, true);
+        once.call(player, document.body, 'touchstart', this.firstTouch);
       };
 
       this.container = () => {
@@ -5379,7 +5280,7 @@ typeof navigator === "object" && (function (global, factory) {
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1220143
 
         this.bind(elements.buttons.settings, 'keyup', event => {
-          if (!['Space', 'Enter'].includes(event.key)) {
+          if (![' ', 'Enter'].includes(event.key)) {
             return;
           } // Because return triggers a click anyway, all we need to do is set focus
 
@@ -5497,7 +5398,7 @@ typeof navigator === "object" && (function (global, factory) {
           }
         }); // Polyfill for lower fill in <input type="range"> for webkit
 
-        if (browser.isWebkit) {
+        if (browser.isWebKit) {
           Array.from(getElements.call(player, 'input[type="range"]')).forEach(element => {
             this.bind(element, 'input', event => controls.updateRangeFill.call(player, event.target));
           });
@@ -5589,7 +5490,6 @@ typeof navigator === "object" && (function (global, factory) {
       this.lastKeyDown = null;
       this.handleKey = this.handleKey.bind(this);
       this.toggleMenu = this.toggleMenu.bind(this);
-      this.setTabFocus = this.setTabFocus.bind(this);
       this.firstTouch = this.firstTouch.bind(this);
     } // Handle key presses
 
@@ -5648,13 +5548,13 @@ typeof navigator === "object" && (function (global, factory) {
             return;
           }
 
-          if (event.key === 'Space' && matches(focused, 'button, [role^="menuitem"]')) {
+          if (event.key === ' ' && matches(focused, 'button, [role^="menuitem"]')) {
             return;
           }
         } // Which keys should we prevent default
 
 
-        const preventDefault = ['Space', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'c', 'f', 'k', 'l', 'm']; // If the key is found prevent default (e.g. prevent scrolling for arrows)
+        const preventDefault = [' ', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'c', 'f', 'k', 'l', 'm']; // If the key is found prevent default (e.g. prevent scrolling for arrows)
 
         if (preventDefault.includes(key)) {
           event.preventDefault();
@@ -5678,7 +5578,7 @@ typeof navigator === "object" && (function (global, factory) {
 
             break;
 
-          case 'Space':
+          case ' ':
           case 'k':
             if (!repeat) {
               silencePromise(player.togglePlay());
@@ -6165,7 +6065,7 @@ typeof navigator === "object" && (function (global, factory) {
         autoplay: player.autoplay,
         muted: player.muted,
         gesture: 'media',
-        playsinline: !this.config.fullscreen.iosNative
+        playsinline: player.config.playsinline
       }, hashParam, frameParams));
       const id = parseId$1(source); // Build an iframe
 
@@ -6311,7 +6211,7 @@ typeof navigator === "object" && (function (global, factory) {
 
         set(input) {
           const toggle = is.boolean(input) ? input : false;
-          player.embed.setVolume(toggle ? 0 : player.config.volume).then(() => {
+          player.embed.setMuted(toggle ? true : player.config.muted).then(() => {
             muted = toggle;
             triggerEvent.call(player, player.media, 'volumechange');
           });
@@ -6584,7 +6484,7 @@ typeof navigator === "object" && (function (global, factory) {
         const posterSrc = s => `https://i.ytimg.com/vi/${videoId}/${s}default.jpg`; // Check thumbnail images in order of quality, but reject fallback thumbnails (120px wide)
 
 
-        loadImage(posterSrc('maxres'), 121) // Higest quality and unpadded
+        loadImage(posterSrc('maxres'), 121) // Highest quality and un-padded
         .catch(() => loadImage(posterSrc('sd'), 121)) // 480p padded 4:3
         .catch(() => loadImage(posterSrc('hq'))) // 360p padded 4:3. Always exists
         .then(image => ui.setPoster.call(player, image.src)).then(src => {
@@ -6610,7 +6510,7 @@ typeof navigator === "object" && (function (global, factory) {
           // Disable keyboard as we handle it
           disablekb: 1,
           // Allow iOS inline playback
-          playsinline: !player.config.fullscreen.iosNative ? 1 : 0,
+          playsinline: player.config.playsinline && !player.config.fullscreen.iosNative ? 1 : 0,
           // Captions are flaky on YouTube
           cc_load_policy: player.captions.active ? 1 : 0,
           cc_lang_pref: player.config.captions.language,
@@ -7522,7 +7422,9 @@ typeof navigator === "object" && (function (global, factory) {
 
           this.render(); // Check to see if thumb container size was specified manually in CSS
 
-          this.determineContainerAutoSizing();
+          this.determineContainerAutoSizing(); // Set up listeners
+
+          this.listeners();
           this.loaded = true;
         });
       };
@@ -8608,7 +8510,7 @@ typeof navigator === "object" && (function (global, factory) {
       } // Check for support again but with type
 
 
-      this.supported = support.check(this.type, this.provider, this.config.playsinline); // If no support for even API, bail
+      this.supported = support.check(this.type, this.provider); // If no support for even API, bail
 
       if (!this.supported.api) {
         this.debug.error('Setup failed: no support');
@@ -8624,9 +8526,7 @@ typeof navigator === "object" && (function (global, factory) {
       this.media.plyr = this; // Wrap media
 
       if (!is.element(this.elements.container)) {
-        this.elements.container = createElement('div', {
-          tabindex: 0
-        });
+        this.elements.container = createElement('div');
         wrap(this.media, this.elements.container);
       } // Migrate custom properties from media to container (so they work 😉)
 
@@ -9319,7 +9219,7 @@ typeof navigator === "object" && (function (global, factory) {
       return this.media === document.pictureInPictureElement;
     }
     /**
-     * Sets the preview thubmnails for the current source
+     * Sets the preview thumbnails for the current source
      */
 
 
@@ -9345,10 +9245,9 @@ typeof navigator === "object" && (function (global, factory) {
      * Check for support
      * @param {String} type - Player type (audio/video)
      * @param {String} provider - Provider (html5/youtube/vimeo)
-     * @param {Boolean} inline - Where player has `playsinline` sttribute
      */
-    static supported(type, provider, inline) {
-      return support.check(type, provider, inline);
+    static supported(type, provider) {
+      return support.check(type, provider);
     }
     /**
      * Load an SVG sprite into the page
